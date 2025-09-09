@@ -3,7 +3,7 @@ import random
 import time
 import json
 
-RED = (255,0,   0)
+RED = (255,0,0)
 GREEN = (78,165,56)
 BLUE = (49,43,240)
 YELLOW = (255, 255, 0)
@@ -36,23 +36,7 @@ class PatrollingBot:
         self.idle_probability = bot_setting["idle_probability"]
         self.turn_probability = bot_setting["turn_probability"]
         self.move_probability = bot_setting["move_probability"]
-        # rand = random.random()
-        # if rand < 0.3:
-        #     self.name = PIKACHU_IMG
-        #     self.size = 50
-        # elif 0.3 <= rand < 0.6:
-        #     self.name = CHARIZARD_MEGA
-        #     self.size = 300
-        #     self.direction = -1
-        #     self.y -= 300
-        # elif 0.6 <= rand < 0.8:
-        #     self.name = BULBASAUR
-        #     self.size = 150
-        # else:
-        #     self.name = CHARMANDER
-        #     self.size = 150
     
-
     def is_dead(self):
         return (True, Ball(self.x + self.size + 20, self.y - 20, 10, self.y + self.size + (self.y_fly - self.size + 50), 20, 1)) if self.color == RED else (False, None)
     
@@ -99,15 +83,14 @@ class PatrollingBot:
     
     def draw_item(self, display):
         if self.color == YELLOW:
-            image_item = pygame.image.load(f"asset/Ballroi2/ballroi_0.png")
-            image_item = pygame.transform.scale(image_item,(20,20))
+            image_item = pygame.image.load(f"asset/Ballroi/ballmo.png")
+            image_item = pygame.transform.scale(image_item,(24,34))
             display.blit(image_item, (self.x + self.size + 20, self.y - 20)) 
 
 class Pikachu(PatrollingBot): 
     def __init__(self, x, y, speed, patrol_range):
         super().__init__(x, y, speed, patrol_range, 50)
         self.currframe = 0
-        # self.list_frame = list_frame_pikachu
     
     def draw_bot(self, display):
         # pygame.draw.rect(display,BLUE, (self.x,self.y, 50,50))
@@ -167,9 +150,12 @@ class Ball:
             self.acceleration /=2
             self.maxheight += (self.patrol_range - self.maxheight)/2
     def draw(self, display):
-        image = pygame.image.load(f"asset/Ballroi2/ballroi_{self.currframe % 32}.png")
+        if not self.currframe:
+            image = pygame.image.load(f"asset/Ballroi/ballroi_{32}.png")
+        else:
+            image = pygame.image.load(f"asset/Ballroi/ballroi_{self.currframe % 32}.png")
+            image = pygame.transform.flip(image,True, False)
         image = pygame.transform.scale(image,(self.size,self.size))
-        image = pygame.transform.flip(image,True, False)
         display.blit(image, (self.x, self.y))
         self.currframe += 1
 

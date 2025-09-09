@@ -1,5 +1,5 @@
 import pygame
-from src.entities.bot import PatrollingBot, creatBot
+from src.entities.bot import creatBot
 import random
 import time
 import json
