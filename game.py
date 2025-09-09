@@ -3,7 +3,7 @@ import random
 import time
 import json
 import os
-from src.entities.bot import PatrollingBot, creatBot
+from src.entities.bot import creatBot
 
 with open("settings.json", "r") as f:
     settings = json.load(f)
@@ -60,6 +60,7 @@ miss = 0
 current_streak = 0
 game_start_time = 0
 listbots = []
+listballs = []
 lastspawn = 0
 spawn_delay = game_setting["spawn_delay"]
 
@@ -223,10 +224,22 @@ while running:
             listbots.append(creatBot(bot_setting["speed"], screen_height, screen_width))
             lastspawn = now
 
-        listbots = list(filter(lambda x: not x.is_dead(), listbots))
+        def bot_is_dead(bot):
+            bot_is_dead, ball = bot.is_dead()
+            if ball:
+                listballs.append(ball)
+            return not bot_is_dead
+        
+        listbots = list(filter(bot_is_dead, listbots))
+        listballs = list(filter(lambda x: not  x.is_dead(), listballs))
+        
         for bot in listbots[::-1]:
             bot.update_position()
             bot.draw(display)
+        
+        for ball in listballs[::-1]:
+            ball.update_position()
+            ball.draw(display)
         
         draw_game_ui()
 
