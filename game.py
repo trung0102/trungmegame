@@ -29,12 +29,13 @@ BACKGROUND_IMG = pygame.image.load("asset/background.png")
 
 running = True
 listbots = []
+listballs = []
 lastspawn = 0
 spawn_delay = game_setting["spawn_delay"]
 font = pygame.font.SysFont("Arial",30)
 hit = 0
 miss = 0
-
+currframe = 0
 while running:
     now = time.time()
     display.fill(WHITE)
@@ -44,15 +45,30 @@ while running:
         listbots.append(creatBot(bot_setting["speed"],screen_height,screen_width))
         lastspawn = now
 
-    listbots = list(filter(lambda x: not x.is_dead(), listbots))
+    def bot_is_dead(bot):
+        bot_is_dead, ball = bot.is_dead()
+        if ball:
+            listballs.append(ball)
+        return not bot_is_dead
+    
+    listbots = list(filter(bot_is_dead, listbots))
+    listballs = list(filter(lambda x: not  x.is_dead(), listballs))
+    
     for bot in listbots[::-1]:
         bot.update_position()
         bot.draw(display)
+    
+    for ball in listballs[::-1]:
+        ball.update_position()
+        ball.draw(display)
 
     #In diem so
-    texthits = font.render(str(hit) + "/" + str(miss), True, BLACK)
-    pygame.draw.rect(display,BLUE,(10,10,25,25))
-    display.blit(texthits, (45,5))
+    texthits = font.render(str(hit) + " / " + str(miss), True, BLACK)
+    image = pygame.image.load(f"asset/Ballxoay/ballxoay_{currframe % 40}.png")
+    currframe +=1
+    image = pygame.transform.scale(image,(50,50))
+    display.blit(image,(15,15))
+    display.blit(texthits, (80,22))
 
 
     for event in pygame.event.get():
