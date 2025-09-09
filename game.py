@@ -1,5 +1,5 @@
 import pygame
-from src.entities.bot import PatrollingBot
+from src.entities.bot import PatrollingBot, creatBot
 import random
 import time
 import json
@@ -41,7 +41,7 @@ while running:
     display.blit(BACKGROUND_IMG, (0,0))
 
     if len(listbots) < bot_setting["quantity"] and now - lastspawn > spawn_delay and random.random() > 1 - game_setting["spawn_probability"]:
-        listbots.append(PatrollingBot(random.randint(50, screen_height-50),random.randint(screen_height-200,screen_height-100),bot_setting["speed"],800))
+        listbots.append(creatBot(bot_setting["speed"],screen_height,screen_width))
         lastspawn = now
 
     listbots = list(filter(lambda x: not x.is_dead(), listbots))
