@@ -61,6 +61,7 @@ current_streak = 0
 game_start_time = 0
 listbots = []
 listballs = []
+current_frame = 0
 lastspawn = 0
 spawn_delay = game_setting["spawn_delay"]
 
@@ -100,10 +101,11 @@ def draw_menu():
     return start_button_rect
 
 def draw_game_ui():
+    global current_frame
     accuracy = (caught / (caught + miss) * 100) if (caught + miss) > 0 else 0
     elapsed_time = time.time() - game_start_time
     remaining_time = max(0, GAME_DURATION - elapsed_time)
-    panel = pygame.Surface((screen_width, 50))
+    panel = pygame.Surface((screen_width, 80))
     panel.set_alpha(150)
     panel.fill(BLACK)
     display.blit(panel, (0, 0))
@@ -114,9 +116,13 @@ def draw_game_ui():
         f"Streak: {current_streak}"
     )
     game_stats = font_small.render(stats_text, True, WHITE)
-    display.blit(game_stats, (20, 12))
+    image = pygame.image.load(f"asset/Ballxoay/ballxoay_{current_frame % 40}.png")
+    current_frame += 1
+    image = pygame.transform.scale(image,(50,50))
+    display.blit(image,(15,15))
+    display.blit(game_stats, (80, 26))
     time_text = font_medium.render(f"Time: {int(remaining_time)}", True, WHITE)
-    time_rect = time_text.get_rect(topright=(screen_width - 20, 8))
+    time_rect = time_text.get_rect(topright=(screen_width - 20, 22))
     display.blit(time_text, time_rect)
 
 def draw_game_over():
