@@ -1,0 +1,17 @@
+{
+    "game": {
+      "screen_width": 800,
+      "screen_height": 600,
+      "spawn_delay": 1,
+      "spawn_probability": 0.7,
+      "font": 30,
+      "fps": 25
+    },
+    "bot": {
+      "speed": 2,
+      "quantity": 10,
+      "idle_probability": 0.005,
+      "turn_probability": 0.0005,
+      "move_probability": 0.055
+    }
+  }
