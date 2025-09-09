@@ -9,7 +9,7 @@
     },
     "bot": {
       "speed": 2,
-      "quantity": 2,
+      "quantity": 10,
       "idle_probability": 0.005,
       "turn_probability": 0.0005,
       "move_probability": 0.055
