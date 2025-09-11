@@ -71,8 +71,9 @@ class PatrollingBot:
         self.name = PokemonName.PIKACHU
         self.currframe = 0
         self.y_fly = y_fly
-        self.y_spawn = self.y - 300
+        self.y_spawn = 10000
         self.x_despawn = -10000
+        self.maxsize = self.size[0]
         self.idle_probability = bot_setting["idle_probability"]
         self.turn_probability = bot_setting["turn_probability"]
         self.move_probability = bot_setting["move_probability"]
@@ -122,10 +123,14 @@ class PatrollingBot:
                 self.currframe = 0
                 self.direction = 1 if random.random() > 0.5 else -1
         # ve hang
-        if self.x == self.x_despawn and random.random() < bot_setting["disappearing_probability"]:
-            self.direction = -1 if self.x_despawn > screen_width/1.99 else 1
-            self.state = PokemonState.DISAPPEARING
-            return
+        if self.name in [PokemonName.PIKACHU]:
+            if self.x == self.x_despawn and random.random() < bot_setting["disappearing_probability"]:
+                self.direction = -1 if self.x_despawn > screen_width/1.99 else 1
+                self.state = PokemonState.DISAPPEARING
+        else:
+            if self.x in range(int(screen_width/2 - 2), int(screen_width/2 + 2)) and random.random() < bot_setting["disappearing_probability"]:
+                self.direction = 1
+                self.state = PokemonState.DISAPPEARING
 
     def handle_bot_click(self, mouse_pos):
         if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
@@ -172,13 +177,19 @@ class PatrollingBot:
         return listdisplay
 
     def get_position_ball(self):
-        return [(self.x + self.size[0] + 20, self.y - 30), (self.x + self.size[0] - 10, self.y - 24), (self.x - 10, self.y - 12)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize + 20) - scale, (self.y - 30) - scale),
+            ((self.x + self.maxsize - 10) - scale, (self.y - 24) - scale),
+            ((self.x - 10) - scale, (self.y - 12) - scale)
+        ]
 
 class FlyPokemon(PatrollingBot):
     def __init__(self, x, y, speed, patrol_range, size, direction=1, y_fly=0):
         super().__init__(x, y, speed, patrol_range, size, direction, y_fly)
         self.numframe = 0
         self.numframeN = 0
+        self.flagdespawn = False
 
     def Spawn(self):
         if self.x + self.size[0] > self.patrol_range or self.x - self.size[0] < 0:
@@ -189,7 +200,14 @@ class FlyPokemon(PatrollingBot):
             self.state = PokemonState.ACTIVE
 
     def Despawn(self):
-        pass
+        self.flagdespawn = True
+        if self.size[0] > 5 and self.size[1] > 5:
+            self.x += self.speed * self.direction
+            self.y -= self.maxsize/500
+            self.currframe += 1
+            if self.size[0] > 5: self.size = tuple(x - 1 for x in self.size)
+        else:
+            self.state = PokemonState.INACTIVE
 
     def draw_bot(self, display):
         # pygame.draw.rect(display,BLUE, (self.x,self.y, self.size[0],self.size[1]))
@@ -205,8 +223,10 @@ class FlyPokemon(PatrollingBot):
                     self.y += 2
             image = pygame.transform.scale(image,(self.size[0],self.size[1]))
         else:
-            image = pygame.image.load(f"asset/{self.name.to_title()}/{str(self.name)}{self.currframe % self.numframe}.png")
-            if self.direction == 1:
+            tmp = "N" if self.flagdespawn else ""
+            numframe = self.numframeN if self.flagdespawn else self.numframe
+            image = pygame.image.load(f"asset/{self.name.to_title()}/{tmp}{str(self.name)}{self.currframe % numframe}.png")
+            if self.direction == 1 and not tmp:
                 image = pygame.transform.flip(image,True, False)
             image = pygame.transform.scale(image,(self.size[0],self.size[1]))
 
@@ -219,6 +239,7 @@ class GroundPokemon(PatrollingBot):
         self.y_spawn = self.y
         self.ydes = random.randint(screen_height-200,screen_height-100)
         self.direction = 1 if self.x < self.patrol_range/2 else -1
+        self.maxsize = self.size[0]
 
     def Spawn(self):
         if self.y < self.ydes:
@@ -275,7 +296,12 @@ class Charizard(FlyPokemon):
         return super().draw(display, num)
     
     def get_position_ball(self):
-        return [(self.x + self.size[0] -30, self.y + 60), (self.x + self.size[0] - 100, self.y +55), (self.x +20, self.y +90)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize - 30) - scale, (self.y + 60) - scale),
+            ((self.x + self.maxsize - 100) - scale, (self.y + 55) - scale),
+            ((self.x + 20) - scale, (self.y + 90) - scale)
+        ]
 
 class Celebi(FlyPokemon): 
     def __init__(self, x, y, speed, patrol_range,imageratio = 67/65):
@@ -294,7 +320,12 @@ class Pidgeot(FlyPokemon):
         self.numframeN = 57
 
     def get_position_ball(self):
-        return [(self.x + self.size[0], self.y - 25), (self.x + self.size[0] - 30, self.y - 20), (self.x, self.y)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize) - scale, (self.y - 25) - scale),
+            ((self.x + self.maxsize - 30) - scale, (self.y- 20) - scale),
+            ((self.x) - scale, (self.y) - scale)
+        ]
 
 class CharizardMegaX(Charizard): 
     def __init__(self, x, y, speed, patrol_range):
@@ -304,7 +335,12 @@ class CharizardMegaX(Charizard):
         self.numframeN = 1
     
     def get_position_ball(self):
-        return [(self.x + self.size[0] -20, self.y -23), (self.x + self.size[0] - 90, self.y -28), (self.x +40, self.y +5)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize -20) - scale, (self.y -23) - scale),
+            ((self.x + self.maxsize - 90) - scale, (self.y -28) - scale),
+            ((self.x +40) - scale, (self.y +5) - scale)
+        ]
 
 
 class Ball:
