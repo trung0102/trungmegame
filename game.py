@@ -35,6 +35,7 @@ font_small = pygame.font.SysFont("Arial", 24)
 font_congrats = pygame.font.SysFont("Arial", 36, bold=True)
 
 BACKGROUND_IMG = pygame.image.load("asset/background.png")
+BACKGROUND_IMG = pygame.transform.scale(BACKGROUND_IMG,(screen_height*(914/609),screen_height))
 
 try:
     pygame.mixer.music.load("asset/sound/background_sound.wav")
@@ -54,7 +55,7 @@ GAME_STATE_PLAYING = "playing"
 GAME_STATE_GAME_OVER = "game_over"
 
 current_state = GAME_STATE_MENU
-GAME_DURATION = 60
+GAME_DURATION = game_setting["duration"]
 caught = 0
 miss = 0
 current_streak = 0
@@ -185,6 +186,7 @@ while running:
     display.fill(WHITE)
 
     for event in pygame.event.get():
+        # print(pygame.mouse.get_pos())
         if event.type == pygame.QUIT:
             running = False
 
@@ -237,6 +239,7 @@ while running:
             return not bot_is_dead
         
         listbots = list(filter(bot_is_dead, listbots))
+        listbots.sort(key=lambda b: b.y and b.name.value, reverse=True)
         listballs = list(filter(lambda x: not  x.is_dead(), listballs))
         
         for bot in listbots[::-1]:
@@ -246,7 +249,31 @@ while running:
         for ball in listballs[::-1]:
             ball.update_position()
             ball.draw(display)
-        
+
+        ######################################################
+        # pygame.draw.rect(display,BLUE, (300, 200, 200,133))    
+        # image = pygame.image.load(f"asset/Pidgeot/pidgeot_frame_0r.png")
+        # image = pygame.transform.scale(image,(80,85))
+        # display.blit(image, (300,200))
+
+        # image_item = pygame.image.load(f"asset/Ballcapture/ballmo.png")
+        # image_item = pygame.transform.scale(image_item,(24,34))
+        # display.blit(image_item, (475, 175)) 
+
+        # image_item = pygame.image.load(f"asset/Ballcapture/lightline.png")
+        # image_item = pygame.transform.scale(image_item,(55,55))
+        # display.blit(image_item, (405, 170))
+
+        # image_item = pygame.image.load(f"asset/Ballcapture/lightball.png")
+        # image_item = pygame.transform.scale(image_item,(80,80))
+        # image_item = pygame.transform.flip(image_item,True, False)
+        # display.blit(image_item, (310, 210))
+
+        # image_item = pygame.image.load(f"asset/Ballcapture/lightball3.png")
+        # image_item = pygame.transform.scale(image_item,(160,160))
+        # image_item = pygame.transform.flip(image_item,True, False)
+        # display.blit(image_item, (345, 245))
+        ######################################################
         draw_game_ui()
 
         if now - game_start_time >= GAME_DURATION:
