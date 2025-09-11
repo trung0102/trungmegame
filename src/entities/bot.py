@@ -44,17 +44,21 @@ class PokemonName(Enum):
 
 
 def creatBot(speed, screen_height, screen_width):
+    idx = random.randint(0,1)
     if random.random() <= 0.2:
-        idx = random.randint(0,1)
         lnum = [(screen_width*(135/800),screen_height*(365/600)),(screen_width*(680/800),screen_height*(350/600))]
         return Pikachu(lnum[idx][0],lnum[idx][1],speed,screen_width)
     elif random.random() <= 0.4:
-        return Charizard(900,random.randint(screen_height-200,screen_height-100),speed,screen_width)
+        lnum = [screen_width + 200, -200]
+        return Charizard(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)
     elif random.random() <= 0.6:
-        return Celebi(900,random.randint(screen_height-200,screen_height-100),speed,screen_width)
+        lnum = [screen_width + 50, -50]
+        return Celebi(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)
     elif random.random() <= 0.8:
-        return Pidgeot(800,random.randint(screen_height-200,screen_height-100),speed,screen_width)
-    return CharizardMegaX(900,random.randint(screen_height-200,screen_height-100),speed,screen_width)    
+        lnum = [screen_width + 80, -80]
+        return Pidgeot(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)
+    lnum = [screen_width + 200, -200]
+    return CharizardMegaX(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)    
 
 class PatrollingBot:
     def __init__(self, x, y, speed, patrol_range, size, direction = 1, y_fly =0):
