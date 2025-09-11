@@ -160,10 +160,10 @@ class PatrollingBot:
             img_lightline = pygame.image.load(f"asset/Ballcapture/lightline2.png")
             img_lightline = pygame.transform.scale(img_lightline,num[0])
             listdisplay += [image_item, img_lightline]
-            if self.currframe > 3:
-                img_lightball = pygame.image.load(f"asset/Ballcapture/lightball2.png")
+            tmp = int(self.currframe/10)+1
+            if self.currframe > 3 and tmp < 4:
+                img_lightball = pygame.image.load(f"asset/Ballcapture/tron{tmp}.png")
                 img_lightball = pygame.transform.scale(img_lightball,num[1])
-                img_lightball = pygame.transform.flip(img_lightball,True, False) 
                 listdisplay.append(img_lightball)
         else:
             image_item = pygame.image.load(f"asset/Ballcapture/balldong.png")
@@ -178,6 +178,7 @@ class FlyPokemon(PatrollingBot):
     def __init__(self, x, y, speed, patrol_range, size, direction=1, y_fly=0):
         super().__init__(x, y, speed, patrol_range, size, direction, y_fly)
         self.numframe = 0
+        self.numframeN = 0
 
     def Spawn(self):
         if self.x + self.size[0] > self.patrol_range or self.x - self.size[0] < 0:
@@ -226,7 +227,7 @@ class GroundPokemon(PatrollingBot):
             self.currframe += 1
         else:
             self.x_despawn = self.x
-            if random.random() < 1:
+            if random.random() < 0.3:
                 self.direction = 0
                 self.currframe = 0
             self.state = PokemonState.ACTIVE
@@ -247,9 +248,14 @@ class Pikachu(GroundPokemon):
     
     def draw_bot(self, display):
         # pygame.draw.rect(display,BLUE, (self.x,self.y, 50,50))
+        if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
+            if self.currframe >22: return
         image = pygame.image.load(f"asset/Pikachu/pikachu{int(self.currframe/2) % 4 + 1}.png")
         if self.direction == 0:
-            image = pygame.image.load(f"asset/Pikachu/frame_{self.currframe % 112}.png")
+            if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
+                image = pygame.image.load(f"asset/Pikachu/frame_0r.png")
+            else:
+                image = pygame.image.load(f"asset/Pikachu/frame_{self.currframe % 112}.png")
         elif self.direction == -1:
             image = pygame.transform.flip(image,True, False)
         image = pygame.transform.scale(image,(self.size[0],self.size[1]))
@@ -263,12 +269,13 @@ class Charizard(FlyPokemon):
         self.name = PokemonName.CHARIZARD
         self.position = (self.x, self.y)
         self.numframe = 47
+        self.numframeN = 51
     
     def draw(self, display, num=[(90, 90), (120, 120)]):
         return super().draw(display, num)
     
     def get_position_ball(self):
-        return [(self.x + self.size[0] -30, self.y + 60), (self.x + self.size[0] - 100, self.y +55), (self.x +20, self.y +70)]
+        return [(self.x + self.size[0] -30, self.y + 60), (self.x + self.size[0] - 100, self.y +55), (self.x +20, self.y +90)]
 
 class Celebi(FlyPokemon): 
     def __init__(self, x, y, speed, patrol_range,imageratio = 67/65):
@@ -276,6 +283,7 @@ class Celebi(FlyPokemon):
         super().__init__(x, y, speed, patrol_range, (50,50/self.imageratio), 1, random.randint(0,300))
         self.name = PokemonName.CELEBI
         self.numframe = 76
+        self.numframeN = 65
 
 class Pidgeot(FlyPokemon): 
     def __init__(self, x, y, speed, patrol_range,imageratio = 110/117):
@@ -283,6 +291,7 @@ class Pidgeot(FlyPokemon):
         super().__init__(x, y, speed, patrol_range, (80,80/self.imageratio), 1, 300)
         self.name = PokemonName.PIDGEOT
         self.numframe = 53
+        self.numframeN = 57
 
     def get_position_ball(self):
         return [(self.x + self.size[0], self.y - 25), (self.x + self.size[0] - 30, self.y - 20), (self.x, self.y)]
@@ -292,9 +301,10 @@ class CharizardMegaX(Charizard):
         super().__init__(x, y, speed, patrol_range, 161/107)
         self.name = PokemonName.CHARIZARD_MEGA
         self.numframe = 64
+        self.numframeN = 1
     
     def get_position_ball(self):
-        return [(self.x + self.size[0] -25, self.y -25), (self.x + self.size[0] - 95, self.y -30), (self.x +40, self.y +10)]
+        return [(self.x + self.size[0] -20, self.y -23), (self.x + self.size[0] - 90, self.y -28), (self.x +40, self.y +5)]
 
 
 class Ball:
