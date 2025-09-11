@@ -26,13 +26,15 @@ class PokemonName(Enum):
     CHARIZARD = 3
     PIDGEOT = 4
     CELEBI = 5
+    RAYQUAZA = 6
     def __str__(self):
         special_map = {
             "CHARIZARD_MEGA": "charizardmegaX_frame_",
             "PIKACHU": "pikachu",
             "CHARIZARD": "charizardframe_",
             "PIDGEOT": "pidgeot_frame_",
-            "CELEBI": "celebi_frame_"
+            "CELEBI": "celebi_frame_",
+            "RAYQUAZA": "rayquazamega_frame_"
         }
         return special_map.get(self.name)
     
@@ -44,17 +46,25 @@ class PokemonName(Enum):
 
 
 def creatBot(speed, screen_height, screen_width):
+    idx = random.randint(0,1)
     if random.random() <= 0.2:
-        idx = random.randint(0,1)
         lnum = [(screen_width*(135/800),screen_height*(365/600)),(screen_width*(680/800),screen_height*(350/600))]
         return Pikachu(lnum[idx][0],lnum[idx][1],speed,screen_width)
     elif random.random() <= 0.4:
-        return Charizard(900,random.randint(screen_height-200,screen_height-100),speed,screen_width)
+        lnum = [screen_width + 200, -200]
+        return Charizard(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)
     elif random.random() <= 0.6:
-        return Celebi(900,random.randint(screen_height-200,screen_height-100),speed,screen_width)
+        lnum = [screen_width + 50, -50]
+        return Celebi(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)
     elif random.random() <= 0.8:
-        return Pidgeot(800,random.randint(screen_height-200,screen_height-100),speed,screen_width)
-    return CharizardMegaX(900,random.randint(screen_height-200,screen_height-100),speed,screen_width)    
+        lnum = [screen_width + 80, -80]
+        return Pidgeot(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)
+    elif random.random() <= 0.85:
+        return RayquazaMega(350 + 16,190 + 300 + 16,speed,screen_width)
+    else:
+        lnum = [screen_width + 200, -200]
+        return CharizardMegaX(lnum[idx],random.randint(screen_height-200,screen_height-100),speed,screen_width)    
+    
 
 class PatrollingBot:
     def __init__(self, x, y, speed, patrol_range, size, direction = 1, y_fly =0):
@@ -71,8 +81,9 @@ class PatrollingBot:
         self.name = PokemonName.PIKACHU
         self.currframe = 0
         self.y_fly = y_fly
-        self.y_spawn = self.y - 300
+        self.y_spawn = 10000
         self.x_despawn = -10000
+        self.maxsize = self.size[0]
         self.idle_probability = bot_setting["idle_probability"]
         self.turn_probability = bot_setting["turn_probability"]
         self.move_probability = bot_setting["move_probability"]
@@ -122,10 +133,15 @@ class PatrollingBot:
                 self.currframe = 0
                 self.direction = 1 if random.random() > 0.5 else -1
         # ve hang
-        if self.x == self.x_despawn and random.random() < bot_setting["disappearing_probability"]:
-            self.direction = -1 if self.x_despawn > screen_width/1.99 else 1
-            self.state = PokemonState.DISAPPEARING
-            return
+        if self.name in [PokemonName.PIKACHU]:
+            if self.x == self.x_despawn and random.random() < bot_setting["disappearing_probability"]:
+                self.direction = -1 if self.x_despawn > screen_width/1.99 else 1
+                self.state = PokemonState.DISAPPEARING
+        else:
+            if self.x in range(int(screen_width/2 - 2), int(screen_width/2 + 2)) and random.random() < bot_setting["disappearing_probability"]:
+                self.direction = 1
+                self.currframe = 0
+                self.state = PokemonState.DISAPPEARING
 
     def handle_bot_click(self, mouse_pos):
         if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
@@ -160,10 +176,10 @@ class PatrollingBot:
             img_lightline = pygame.image.load(f"asset/Ballcapture/lightline2.png")
             img_lightline = pygame.transform.scale(img_lightline,num[0])
             listdisplay += [image_item, img_lightline]
-            if self.currframe > 3:
-                img_lightball = pygame.image.load(f"asset/Ballcapture/lightball2.png")
+            tmp = int(self.currframe/10)+1
+            if self.currframe > 3 and tmp < 4:
+                img_lightball = pygame.image.load(f"asset/Ballcapture/tron{tmp}.png")
                 img_lightball = pygame.transform.scale(img_lightball,num[1])
-                img_lightball = pygame.transform.flip(img_lightball,True, False) 
                 listdisplay.append(img_lightball)
         else:
             image_item = pygame.image.load(f"asset/Ballcapture/balldong.png")
@@ -172,12 +188,19 @@ class PatrollingBot:
         return listdisplay
 
     def get_position_ball(self):
-        return [(self.x + self.size[0] + 20, self.y - 30), (self.x + self.size[0] - 10, self.y - 24), (self.x - 10, self.y - 12)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize + 20) - scale, (self.y - 30) - scale),
+            ((self.x + self.maxsize - 10) - scale, (self.y - 24) - scale),
+            ((self.x - 10) - scale, (self.y - 12) - scale)
+        ]
 
 class FlyPokemon(PatrollingBot):
     def __init__(self, x, y, speed, patrol_range, size, direction=1, y_fly=0):
         super().__init__(x, y, speed, patrol_range, size, direction, y_fly)
         self.numframe = 0
+        self.numframeN = 0
+        self.flagdespawn = False
 
     def Spawn(self):
         if self.x + self.size[0] > self.patrol_range or self.x - self.size[0] < 0:
@@ -188,7 +211,14 @@ class FlyPokemon(PatrollingBot):
             self.state = PokemonState.ACTIVE
 
     def Despawn(self):
-        pass
+        self.flagdespawn = True
+        if self.size[0] > 5 and self.size[1] > 5:
+            self.x += self.speed * self.direction
+            self.y -= self.maxsize/500
+            self.currframe += 1
+            if self.size[0] > 5: self.size = tuple(x - 1 for x in self.size)
+        else:
+            self.state = PokemonState.INACTIVE
 
     def draw_bot(self, display):
         # pygame.draw.rect(display,BLUE, (self.x,self.y, self.size[0],self.size[1]))
@@ -204,8 +234,10 @@ class FlyPokemon(PatrollingBot):
                     self.y += 2
             image = pygame.transform.scale(image,(self.size[0],self.size[1]))
         else:
-            image = pygame.image.load(f"asset/{self.name.to_title()}/{str(self.name)}{self.currframe % self.numframe}.png")
-            if self.direction == 1:
+            tmp = "N" if self.flagdespawn else ""
+            numframe = self.numframeN if self.flagdespawn else self.numframe
+            image = pygame.image.load(f"asset/{self.name.to_title()}/{tmp}{str(self.name)}{self.currframe % numframe}.png")
+            if self.direction == 1 and not tmp:
                 image = pygame.transform.flip(image,True, False)
             image = pygame.transform.scale(image,(self.size[0],self.size[1]))
 
@@ -218,6 +250,7 @@ class GroundPokemon(PatrollingBot):
         self.y_spawn = self.y
         self.ydes = random.randint(screen_height-200,screen_height-100)
         self.direction = 1 if self.x < self.patrol_range/2 else -1
+        self.maxsize = self.size[0]
 
     def Spawn(self):
         if self.y < self.ydes:
@@ -226,7 +259,7 @@ class GroundPokemon(PatrollingBot):
             self.currframe += 1
         else:
             self.x_despawn = self.x
-            if random.random() < 1:
+            if random.random() < 0.3:
                 self.direction = 0
                 self.currframe = 0
             self.state = PokemonState.ACTIVE
@@ -247,9 +280,14 @@ class Pikachu(GroundPokemon):
     
     def draw_bot(self, display):
         # pygame.draw.rect(display,BLUE, (self.x,self.y, 50,50))
+        if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
+            if self.currframe >22: return
         image = pygame.image.load(f"asset/Pikachu/pikachu{int(self.currframe/2) % 4 + 1}.png")
         if self.direction == 0:
-            image = pygame.image.load(f"asset/Pikachu/frame_{self.currframe % 112}.png")
+            if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
+                image = pygame.image.load(f"asset/Pikachu/frame_0r.png")
+            else:
+                image = pygame.image.load(f"asset/Pikachu/frame_{self.currframe % 112}.png")
         elif self.direction == -1:
             image = pygame.transform.flip(image,True, False)
         image = pygame.transform.scale(image,(self.size[0],self.size[1]))
@@ -257,18 +295,24 @@ class Pikachu(GroundPokemon):
         self.currframe += 1
 
 class Charizard(FlyPokemon): 
-    def __init__(self, x, y, speed, patrol_range, imageratio = 133/144):
+    def __init__(self, x, y, speed, patrol_range, imageratio = 133/144, size = 200):
         self.imageratio = imageratio
-        super().__init__(x, y, speed, patrol_range, (200,200/self.imageratio), 1, 300)
+        super().__init__(x, y, speed, patrol_range, (size,size/self.imageratio), 1, 300)
         self.name = PokemonName.CHARIZARD
         self.position = (self.x, self.y)
         self.numframe = 47
+        self.numframeN = 51
     
     def draw(self, display, num=[(90, 90), (120, 120)]):
         return super().draw(display, num)
     
     def get_position_ball(self):
-        return [(self.x + self.size[0] -30, self.y + 60), (self.x + self.size[0] - 100, self.y +55), (self.x +20, self.y +70)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize - 30) - scale, (self.y + 60) - scale),
+            ((self.x + self.maxsize - 100) - scale, (self.y + 55) - scale),
+            ((self.x + 20) - scale, (self.y + 90) - scale)
+        ]
 
 class Celebi(FlyPokemon): 
     def __init__(self, x, y, speed, patrol_range,imageratio = 67/65):
@@ -276,6 +320,7 @@ class Celebi(FlyPokemon):
         super().__init__(x, y, speed, patrol_range, (50,50/self.imageratio), 1, random.randint(0,300))
         self.name = PokemonName.CELEBI
         self.numframe = 76
+        self.numframeN = 65
 
 class Pidgeot(FlyPokemon): 
     def __init__(self, x, y, speed, patrol_range,imageratio = 110/117):
@@ -283,19 +328,118 @@ class Pidgeot(FlyPokemon):
         super().__init__(x, y, speed, patrol_range, (80,80/self.imageratio), 1, 300)
         self.name = PokemonName.PIDGEOT
         self.numframe = 53
+        self.numframeN = 57
 
     def get_position_ball(self):
-        return [(self.x + self.size[0], self.y - 25), (self.x + self.size[0] - 30, self.y - 20), (self.x, self.y)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize) - scale, (self.y - 25) - scale),
+            ((self.x + self.maxsize - 30) - scale, (self.y- 20) - scale),
+            ((self.x) - scale, (self.y) - scale)
+        ]
 
 class CharizardMegaX(Charizard): 
     def __init__(self, x, y, speed, patrol_range):
         super().__init__(x, y, speed, patrol_range, 161/107)
         self.name = PokemonName.CHARIZARD_MEGA
         self.numframe = 64
+        self.numframeN = 1
     
     def get_position_ball(self):
-        return [(self.x + self.size[0] -25, self.y -25), (self.x + self.size[0] - 95, self.y -30), (self.x +40, self.y +10)]
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize -20) - scale, (self.y -23) - scale),
+            ((self.x + self.maxsize - 90) - scale, (self.y -28) - scale),
+            ((self.x +40) - scale, (self.y +5) - scale)
+        ]
+    
+class RayquazaMega(Charizard): 
+    def __init__(self, x, y, speed, patrol_range):
+        super().__init__(x, y, speed, patrol_range, 136/146, 208)
+        self.direction = -1
+        self.name = PokemonName.RAYQUAZA
+        self.numframe = 75
+        self.numframeN = 1
+        self.flag = 0
+    
+    def get_position_ball(self):
+        scale = (self.maxsize-self.size[0]) *0.7
+        return [
+            ((self.x + self.maxsize -32) - scale, (self.y +60) - scale),
+            ((self.x + self.maxsize - 132) - scale, (self.y +46) - scale),
+            ((self.x +20) - scale, (self.y + 90) - scale)
+        ]
+    
+    def draw(self, display):
+        num = [(120, 120), (180, 180)]
+        if not self.flag:
+            self.draw_bot(display)
+        listdisplay = self.draw_item(num)
+        if not listdisplay: return
+        if not self.posball: self.posball = self.get_position_ball()
+        for i, img in enumerate(listdisplay):
+            display.blit(img, self.posball[i])
 
+        if self.flag:
+            self.draw_bot(display)
+    
+    def draw_bot(self, display):
+        if self.state in [PokemonState.APPEARING]:
+            if self.currframe <= 32:
+                image = pygame.image.load(f"asset/Rayquaza/rayquazamega_frame_0w.png")
+                image = pygame.transform.scale(image,(self.size[0],self.size[1]))
+                self.size = tuple(x+2 for x in self.size)
+                self.x -= 0.5
+                self.y -= 0.5
+            else:
+                image = pygame.image.load(f"asset/Rayquaza/rayquazamega_frame_0.png")
+                image = pygame.transform.scale(image,(self.size[0],self.size[1]))
+            display.blit(image, (self.x, self.y))
+            self.currframe += 1
+        elif self.state in [PokemonState.DISAPPEARING]:
+            if self.currframe > 18:
+                image = pygame.image.load(f"asset/Rayquaza/rayquazamega_frame_0w.png")
+                image = pygame.transform.scale(image,(self.size[0],self.size[1]))
+                self.size = tuple(x-2 for x in self.size)
+                self.x += 0.5
+                self.y += 0.5
+            else:
+                image = pygame.image.load(f"asset/Rayquaza/rayquazamega_frame_0.png")
+                image = pygame.transform.scale(image,(self.size[0],self.size[1]))
+            display.blit(image, (self.x, self.y))
+            self.currframe += 1
+        else: return super().draw_bot(display)
+
+    def draw_item(self, num):
+        if self.state in [PokemonState.APPEARING, PokemonState.DISAPPEARING]: 
+            image = pygame.image.load(f"asset/Ballcapture/xuathien.png")
+            image = pygame.transform.scale(image,(500,500))
+            image = pygame.transform.flip(image,False, True)
+            curr = 0
+            if self.currframe < 40: curr += 1
+            x = self.x - 66+ 0.5*self.currframe*self.flag
+            self.posball = [(x,0)] + self.posball if self.posball else [(x,0)]
+            return [image]
+        return super().draw_item(num)
+
+    def Despawn(self):
+        if self.currframe < 50:
+            self.flag = -1
+        else: 
+            self.state = PokemonState.INACTIVE
+            self.currframe = 0
+            self.posball = None
+            self.flag = False
+
+    def Spawn(self):
+        if self.currframe < 50:
+            self.flag = 1
+        else: 
+            self.state = PokemonState.ACTIVE
+            self.currframe = 0
+            self.posball = None
+            self.maxsize = self.size[0]
+            self.flag = False
 
 class Ball:
     def __init__(self, x, y, acceleration, patrol_range, size, direction = 1):
@@ -335,12 +479,3 @@ class Ball:
         image = pygame.transform.scale(image,(self.size,self.size))
         display.blit(image, (self.x, self.y))
         self.currframe += 1
-
-CHARIZARD_MEGA = pygame.image.load("asset/charizard-mega-x.png")
-CHARIZARD_MEGA = pygame.transform.scale(CHARIZARD_MEGA, (300,300))
-
-BULBASAUR = pygame.image.load("asset/bulbasaur.png")
-BULBASAUR = pygame.transform.scale(BULBASAUR, (150,150))
-
-CHARMANDER = pygame.image.load("asset/charmander.png")
-CHARMANDER = pygame.transform.scale(CHARMANDER, (150,150))

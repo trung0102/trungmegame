@@ -252,22 +252,26 @@ while running:
 
         ######################################################
         # pygame.draw.rect(display,BLUE, (300, 200, 200,133))    
-        # image = pygame.image.load(f"asset/Pidgeot/pidgeot_frame_0r.png")
-        # image = pygame.transform.scale(image,(80,85))
-        # display.blit(image, (300,200))
+        # image = pygame.image.load(f"asset/Ballcapture/xuathien.png")
+        # image = pygame.transform.scale(image,(500,500))
+        # image = pygame.transform.flip(image,False, True)
+        # display.blit(image, (300,0))
+        # image = pygame.image.load(f"asset/Rayquaza/rayquazamega_frame_0w.png")
+        # image = pygame.transform.scale(image,(272,292))
+        # display.blit(image, (350,190))
 
         # image_item = pygame.image.load(f"asset/Ballcapture/ballmo.png")
         # image_item = pygame.transform.scale(image_item,(24,34))
-        # display.blit(image_item, (475, 175)) 
+        # display.blit(image_item, (440, 260)) 
 
         # image_item = pygame.image.load(f"asset/Ballcapture/lightline.png")
-        # image_item = pygame.transform.scale(image_item,(55,55))
-        # display.blit(image_item, (405, 170))
+        # image_item = pygame.transform.scale(image_item,(120,120))
+        # display.blit(image_item, (340, 250))
 
-        # image_item = pygame.image.load(f"asset/Ballcapture/lightball.png")
-        # image_item = pygame.transform.scale(image_item,(80,80))
+        # image_item = pygame.image.load(f"asset/Ballcapture/tron1.png")
+        # image_item = pygame.transform.scale(image_item,(180,180))
         # image_item = pygame.transform.flip(image_item,True, False)
-        # display.blit(image_item, (310, 210))
+        # display.blit(image_item, (220, 290))
 
         # image_item = pygame.image.load(f"asset/Ballcapture/lightball3.png")
         # image_item = pygame.transform.scale(image_item,(160,160))
