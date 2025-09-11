@@ -5,14 +5,15 @@
       "spawn_delay": 1,
       "spawn_probability": 0.7,
       "font": 30,
-      "fps": 120,
+      "fps": 25,
       "duration": 100000
     },
     "bot": {
       "speed": 2,
-      "quantity": 5,
+      "quantity": 10,
       "idle_probability": 0.005,
       "turn_probability": 0.0005,
-      "move_probability": 0.055
+      "move_probability": 0.055,
+      "disappearing_probability": 0.3
     }
   }

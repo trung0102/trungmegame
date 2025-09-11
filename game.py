@@ -251,25 +251,23 @@ while running:
             ball.draw(display)
 
         ######################################################
-        image = pygame.image.load(f"asset/Charizard/charizardframe_0.png")
-        image = pygame.transform.scale(image,(200,200))
-        display.blit(image, (300,200))
-        image_item = pygame.image.load(f"asset/Ballcapture/ballmo.png")
-        image_item = pygame.transform.scale(image_item,(24,34))
-        display.blit(image_item, (470, 260)) 
+        # pygame.draw.rect(display,BLUE, (300, 200, 200,133))    
+        # image = pygame.image.load(f"asset/Pidgeot/pidgeot_frame_0r.png")
+        # image = pygame.transform.scale(image,(80,85))
+        # display.blit(image, (300,200))
 
-        # pygame.draw.rect(display,BLUE, (470, 280, 50,50))
+        # image_item = pygame.image.load(f"asset/Ballcapture/ballmo.png")
+        # image_item = pygame.transform.scale(image_item,(24,34))
+        # display.blit(image_item, (475, 175)) 
 
-        
-        
-        image_item = pygame.image.load(f"asset/Ballcapture/lightline.png")
-        image_item = pygame.transform.scale(image_item,(90,90))
-        display.blit(image_item, (400, 255))
+        # image_item = pygame.image.load(f"asset/Ballcapture/lightline.png")
+        # image_item = pygame.transform.scale(image_item,(55,55))
+        # display.blit(image_item, (405, 170))
 
-        image_item = pygame.image.load(f"asset/Ballcapture/lightball.png")
-        image_item = pygame.transform.scale(image_item,(120,120))
-        image_item = pygame.transform.flip(image_item,True, False)
-        display.blit(image_item, (320, 270))
+        # image_item = pygame.image.load(f"asset/Ballcapture/lightball.png")
+        # image_item = pygame.transform.scale(image_item,(80,80))
+        # image_item = pygame.transform.flip(image_item,True, False)
+        # display.blit(image_item, (310, 210))
 
         # image_item = pygame.image.load(f"asset/Ballcapture/lightball3.png")
         # image_item = pygame.transform.scale(image_item,(160,160))

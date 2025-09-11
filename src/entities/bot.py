@@ -26,6 +26,21 @@ class PokemonName(Enum):
     CHARIZARD = 3
     PIDGEOT = 4
     CELEBI = 5
+    def __str__(self):
+        special_map = {
+            "CHARIZARD_MEGA": "charizardmegaX_frame_",
+            "PIKACHU": "pikachu",
+            "CHARIZARD": "charizardframe_",
+            "PIDGEOT": "pidgeot_frame_",
+            "CELEBI": "celebi_frame_"
+        }
+        return special_map.get(self.name)
+    
+    def to_title(self):
+        special_map = {
+            "CHARIZARD_MEGA": "Charizard",
+        }
+        return special_map.get(self.name, self.name.capitalize())
 
 
 def creatBot(speed, screen_height, screen_width):
@@ -52,6 +67,7 @@ class PatrollingBot:
         self.lastchange = 0
         self.dead_delay = 2
         self.size = size
+        self.posball = None
         self.name = PokemonName.PIKACHU
         self.currframe = 0
         self.y_fly = y_fly
@@ -63,7 +79,7 @@ class PatrollingBot:
     
     def is_dead(self):
         if self.state == PokemonState.INACTIVE:
-            pos_x, pos_y = self.get_position_ball()[0]
+            if self.y > self.y_spawn: pos_x, pos_y = self.posball[0]
             ball = Ball(pos_x, pos_y, 10, self.y + self.size[1] + (self.y_fly - self.size[1] + 50), 20, 1) if self.y > self.y_spawn else None
             return (True, ball)
         else: return (False, None)
@@ -75,16 +91,26 @@ class PatrollingBot:
         pass
     
     def update_position(self):
-        if self.state == PokemonState.APPEARING:
+        if self.state == PokemonState.APPEARING: #xuat hien
             return self.Spawn()
-        if self.state == PokemonState.DISAPPEARING:
+        if self.state == PokemonState.DISAPPEARING: #roi di
             return self.Despawn()
-        if self.x == self.x_despawn and random.random()<2:
-            self.direction = -1 if self.x_despawn > screen_width/1.99 else 1
-            self.state = PokemonState.DISAPPEARING
-            return
-
+        # phatno
+        now = time.time()
+        if now - self.lastchange >= self.dead_delay and not self.lastchange == 0:
+            self.state = PokemonState.INACTIVE
+        # cap nhap vi tri
+        if self.state == PokemonState.CAPTURED:
+            return 
         self.x += self.speed * self.direction
+        if self.x < 0:
+            self.x = 0
+            self.direction = 1
+        elif self.x + self.size[0] > self.patrol_range:
+            self.x = self.patrol_range - self.size[0]
+            self.direction = -1
+
+        # thay doi trang thai
         if self.direction:
             if random.random() > 1 - self.idle_probability:
                 self.direction = 0
@@ -92,21 +118,14 @@ class PatrollingBot:
             if random.random() > 1- self.turn_probability:
                 self.direction = -self.direction
         else:
-            if not self.state == PokemonState.CAPTURED and random.random() > 1 - self.move_probability:
+            if random.random() > 1 - self.move_probability:
                 self.currframe = 0
                 self.direction = 1 if random.random() > 0.5 else -1
-        if self.x < 0 and not self.state == PokemonState.CAPTURED:
-            self.x = 0
-            self.direction = 1
-        elif self.x + self.size[0] > self.patrol_range and not self.state == PokemonState.CAPTURED:
-            self.x = self.patrol_range - self.size[0]
-            self.direction = -1
-
-        
-        #phatno
-        now = time.time()
-        if now - self.lastchange >= self.dead_delay and not self.lastchange == 0:
-            self.state = PokemonState.INACTIVE
+        # ve hang
+        if self.x == self.x_despawn and random.random() < bot_setting["disappearing_probability"]:
+            self.direction = -1 if self.x_despawn > screen_width/1.99 else 1
+            self.state = PokemonState.DISAPPEARING
+            return
 
     def handle_bot_click(self, mouse_pos):
         if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
@@ -124,9 +143,9 @@ class PatrollingBot:
         self.draw_bot(display)
         listdisplay = self.draw_item(num)
         if not listdisplay: return
-        positions = self.get_position_ball()
+        if not self.posball: self.posball = self.get_position_ball()
         for i, img in enumerate(listdisplay):
-            display.blit(img, positions[i])
+            display.blit(img, self.posball[i])
     
     def draw_bot(self, display):
         if self.currframe < 2: display.blit(self.name, (self.x, self.y))
@@ -158,6 +177,7 @@ class PatrollingBot:
 class FlyPokemon(PatrollingBot):
     def __init__(self, x, y, speed, patrol_range, size, direction=1, y_fly=0):
         super().__init__(x, y, speed, patrol_range, size, direction, y_fly)
+        self.numframe = 0
 
     def Spawn(self):
         if self.x + self.size[0] > self.patrol_range or self.x - self.size[0] < 0:
@@ -169,6 +189,28 @@ class FlyPokemon(PatrollingBot):
 
     def Despawn(self):
         pass
+
+    def draw_bot(self, display):
+        # pygame.draw.rect(display,BLUE, (self.x,self.y, self.size[0],self.size[1]))
+        if self.state in [PokemonState.CAPTURED, PokemonState.INACTIVE]:
+            if self.currframe >22: return
+            if self.currframe < 2:
+                image = pygame.image.load(f"asset/{self.name.to_title()}/{str(self.name)}0.png")
+            else:
+                image = pygame.image.load(f"asset/{self.name.to_title()}/{str(self.name)}0r.png")
+                if self.size[0] > 50:
+                    self.size = tuple(x-4 for x in self.size)
+                    self.x += 2
+                    self.y += 2
+            image = pygame.transform.scale(image,(self.size[0],self.size[1]))
+        else:
+            image = pygame.image.load(f"asset/{self.name.to_title()}/{str(self.name)}{self.currframe % self.numframe}.png")
+            if self.direction == 1:
+                image = pygame.transform.flip(image,True, False)
+            image = pygame.transform.scale(image,(self.size[0],self.size[1]))
+
+        display.blit(image, (self.x, self.y))
+        self.currframe += 1
 
 class GroundPokemon(PatrollingBot):
     def __init__(self, x, y, speed, patrol_range, size, direction=1, y_fly=0):
@@ -219,15 +261,8 @@ class Charizard(FlyPokemon):
         self.imageratio = imageratio
         super().__init__(x, y, speed, patrol_range, (200,200/self.imageratio), 1, 300)
         self.name = PokemonName.CHARIZARD
-
-    def draw_bot(self, display):
-        # pygame.draw.rect(display,BLUE, (self.x,self.y, 200,200))
-        image = pygame.image.load(f"asset/Charizard/charizardframe_{self.currframe % 47}.png")
-        if self.direction == 1:
-            image = pygame.transform.flip(image,True, False)
-        image = pygame.transform.scale(image,(self.size[0],self.size[1]))
-        display.blit(image, (self.x, self.y))
-        self.currframe += 1
+        self.position = (self.x, self.y)
+        self.numframe = 47
     
     def draw(self, display, num=[(90, 90), (120, 120)]):
         return super().draw(display, num)
@@ -240,43 +275,26 @@ class Celebi(FlyPokemon):
         self.imageratio = imageratio
         super().__init__(x, y, speed, patrol_range, (50,50/self.imageratio), 1, random.randint(0,300))
         self.name = PokemonName.CELEBI
-    
-    def draw_bot(self, display):
-        image = pygame.image.load(f"asset/Celebi/celebi_frame_{self.currframe % 76}.png")
-        if self.direction == 1:
-            image = pygame.image.load(f"asset/Celebi/celebiN_frame_{self.currframe % 75}.png")
-        image = pygame.transform.scale(image,(self.size[0],self.size[1]))
-        display.blit(image, (self.x, self.y))
-        self.currframe += 1
+        self.numframe = 76
 
 class Pidgeot(FlyPokemon): 
     def __init__(self, x, y, speed, patrol_range,imageratio = 110/117):
         self.imageratio = imageratio
         super().__init__(x, y, speed, patrol_range, (80,80/self.imageratio), 1, 300)
         self.name = PokemonName.PIDGEOT
-    
-    def draw_bot(self, display):
-        image = pygame.image.load(f"asset/Pidgeot/pidgeot_frame_{self.currframe % 53}.png")
-        if self.direction == 1:
-            # image = pygame.image.load(f"asset/Pidgeot/pidgeotN_frame_{self.currframe % 57}.png")
-            image = pygame.transform.flip(image,True, False)
-        image = pygame.transform.scale(image,(self.size[0],self.size[1]))
-        display.blit(image, (self.x, self.y))
-        self.currframe += 1        
+        self.numframe = 53
+
+    def get_position_ball(self):
+        return [(self.x + self.size[0], self.y - 25), (self.x + self.size[0] - 30, self.y - 20), (self.x, self.y)]
 
 class CharizardMegaX(Charizard): 
     def __init__(self, x, y, speed, patrol_range):
         super().__init__(x, y, speed, patrol_range, 161/107)
         self.name = PokemonName.CHARIZARD_MEGA
+        self.numframe = 64
     
-    def draw_bot(self, display):
-        # pygame.draw.rect(display,BLUE, (self.x,self.y, 200,200))
-        image = pygame.image.load(f"asset/Charizard/charizardmegaX_frame_{self.currframe % 64}.png")
-        if self.direction == 1:
-            image = pygame.transform.flip(image,True, False)
-        image = pygame.transform.scale(image,(self.size[0],self.size[1]))
-        display.blit(image, (self.x, self.y))
-        self.currframe += 1
+    def get_position_ball(self):
+        return [(self.x + self.size[0] -25, self.y -25), (self.x + self.size[0] - 95, self.y -30), (self.x +40, self.y +10)]
 
 
 class Ball:
