@@ -6,7 +6,7 @@
       "spawn_probability": 0.7,
       "font": 30,
       "fps": 25,
-      "duration": 120
+      "duration": 10000
     },
     "bot": {
       "speed": 2,

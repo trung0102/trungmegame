@@ -93,7 +93,7 @@ def draw_menu():
     display.blit(title_text, title_rect)
 
     start_button_rect = pygame.Rect(screen_width / 2 - 100, screen_height / 2, 200, 50)
-    pygame.draw.rect(display, GREEN, start_button_rect, border_radius=10)
+    pygame.draw.rect(display, (21,125,156), start_button_rect, border_radius=10)
     
     start_text = font_medium.render("START", True, WHITE)
     start_text_rect = start_text.get_rect(center=start_button_rect.center)
@@ -186,7 +186,6 @@ while running:
     display.fill(WHITE)
 
     for event in pygame.event.get():
-        # print(pygame.mouse.get_pos())
         if event.type == pygame.QUIT:
             running = False
 
@@ -228,6 +227,8 @@ while running:
     elif current_state == GAME_STATE_PLAYING:
         display.blit(BACKGROUND_IMG, (0, 0))
 
+        
+
         if len(listbots) < bot_setting["quantity"] and now - lastspawn > spawn_delay and random.random() > 1 - game_setting["spawn_probability"]:
             listbots.append(creatBot(bot_setting["speed"], screen_height, screen_width))
             lastspawn = now
@@ -249,7 +250,13 @@ while running:
         for ball in listballs[::-1]:
             ball.update_position()
             ball.draw(display)
+        
 
+        pos_x, pos_y = pygame.mouse.get_pos()
+        pygame.mouse.set_visible(False)
+        image = pygame.image.load(f"asset/Ballxoay/ballxoay_0.png")
+        image = pygame.transform.scale(image,(20,20))
+        display.blit(image, (pos_x-10,pos_y-10))
         ######################################################
         # pygame.draw.rect(display,BLUE, (300, 200, 200,133))    
         # image = pygame.image.load(f"asset/Ballcapture/xuathien.png")
