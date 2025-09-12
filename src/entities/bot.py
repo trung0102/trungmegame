@@ -201,6 +201,7 @@ class FlyPokemon(PatrollingBot):
         self.numframe = 0
         self.numframeN = 0
         self.flagdespawn = False
+        self.y_spawn = 0
 
     def Spawn(self):
         if self.x + self.size[0] > self.patrol_range or self.x - self.size[0] < 0:
@@ -219,6 +220,7 @@ class FlyPokemon(PatrollingBot):
             if self.size[0] > 5: self.size = tuple(x - 1 for x in self.size)
         else:
             self.state = PokemonState.INACTIVE
+            self.y_spawn = 10000
 
     def draw_bot(self, display):
         # pygame.draw.rect(display,BLUE, (self.x,self.y, self.size[0],self.size[1]))
@@ -382,6 +384,11 @@ class RayquazaMega(Charizard):
 
         if self.flag:
             self.draw_bot(display)
+
+    def handle_bot_click(self, mouse_pos):
+        if self.state in [PokemonState.APPEARING, PokemonState.DISAPPEARING]:
+            return False
+        return super().handle_bot_click(mouse_pos)
     
     def draw_bot(self, display):
         if self.state in [PokemonState.APPEARING]:
